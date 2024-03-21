@@ -1,0 +1,5 @@
+﻿  list.cpp
+  main.cpp
+  Generating Code...
+Z:\2024-02-01-list\list.cpp(50): warning C4172: returning address of local variable or temporary: elem
+  2024-02-01-list.vcxproj -> Z:\2024-02-01-list\Debug\2024-02-01-list.exe
