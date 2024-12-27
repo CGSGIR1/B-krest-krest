@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rodin Ilya HTML</title>
+        <meta charset="utf-8" />
+    </head>
+    <bode>
+        <h1>Формула Герона</h1>
+        <form>
+            <label for="fside">Первая сторона:</label><br>
+            <input type="text" id="fside" name="fside"><br>
+            <label for="sside">Вторая сторона:</label><br>
+            <input type="text" id="sside" name="sside"><br>
+            <label for="tside">Третья сторона:</label><br>
+            <input type="text" id="tside" name="tside"><br>
+        </form>
+        <button type="button" onclick="calc()" >Посчитать</button>
+        <h3>Результат</h3>
+        <p id="out"></p>
+        <script>
+            function calc() {
+                let p1 = parseFloat(document.getElementById("fside").value);
+                let p2 = parseFloat(document.getElementById("sside").value);
+                let p3 = parseFloat(document.getElementById("tside").value);
+                if (isNaN(p1) || isNaN(p2) || isNaN(p3)) {
+                    document.getElementById("out").innerHTML = "Неправильный формат входных данных";
+                } else {
+                    let p = (p1 + p2 + p3) / 2;
+                    let res = Math.sqrt(p * (p - p1) * (p - p2) * (p - p3));
+                    document.getElementById("out").innerHTML = res;
+                }
+                
+            }
+        </script>
+        <br><a href="./index.html">Главная страница</a>
+    </bode>
+</html>

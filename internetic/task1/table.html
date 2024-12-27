@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            table {
+              font-family: arial, sans-serif;
+              border-collapse: collapse;
+              width: 100%;
+            }
+            
+            td, th {
+              border: 1px solid #dddddd;
+              text-align: left;
+              padding: 8px;
+            }
+            
+            tr:nth-child(even) {
+              background-color: #dddddd;
+            }
+            </style>
+        <title>Rodin Ilya HTML</title>
+        <meta charset="utf-8" />
+    </head>
+    <bode>
+        <h1>Таблица умножения</h1>
+        <label for="fside">Последнее число таблицы</label><br>
+        <input type="text" id="fside" name="fside"><br>
+        <button type="button" onclick="calc()" >Посчитать</button>
+        <h3>Результат</h3>
+        <p id="p-table">
+        <script>
+            function calc() {
+                let n = parseInt(document.getElementById("fside").value);
+                let p = document.getElementById("p-table");
+                if (isNaN(n)) {
+                    document.getElementById("p-table").innerHTML = "Неправильный формат входных данных";
+                } else {
+                    let s = "<table>"
+                    for (let i = 1; i < n + 1; i++) {
+                        s += "<tr>";
+                        for (let j = 1; j < n + 1; j++) {
+                            s += "<th>"+ (j * i) +"</th>";
+                        }
+                        s += "</tr>";
+                    }
+                    p.innerHTML = s;
+                }
+            }
+        </script>
+        <p id="p-tabls"></p>
+        <br><a href="./index.html">Главная страница</a>
+    </bode>
+</html>

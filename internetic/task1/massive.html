@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rodin Ilya HTML</title>
+        <meta charset="utf-8" />
+    </head>
+    <bode>
+        <h1>Подсчет символов</h1>
+        <textarea id="text" rows="4" cols="50">Text example</textarea><br>
+        <button type="button" onclick="calc()" >Посчитать</button>
+        <h3>Результат</h3>
+        <textarea id="out" rows="20" cols="50" disabled="true"></textarea><br>
+        <script>
+            function calc() {
+                let p1 = document.getElementById("text").value;
+                const letters = new Map();
+                for (let i = 0; i < p1.length; i++){
+                    let n = letters.get(p1[i]);
+                    if (n !== undefined) {
+                        letters.set(p1[i], n + 1);
+                    } else {
+                        letters.set(p1[i], 1);
+                    }
+                }
+                let res = "";
+                letters.forEach (function(value, key) {
+                    res += key + ': ' + value + '\n';
+                })
+                document.getElementById("out").innerHTML = res;
+            }
+        </script>
+        <br><a href="./index.html">Главная страница</a>
+    </bode>
+</html>

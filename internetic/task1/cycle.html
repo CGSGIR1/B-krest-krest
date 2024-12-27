@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rodin Ilya HTML</title>
+        <meta charset="utf-8" />
+    </head>
+    <bode>
+        <h1>Числа Фибоначчи</h1>
+        <label for="fside">Номер числа</label><br>
+        <input type="text" id="fside" name="fside"><br>
+        <button type="button" onclick="calc()" >Посчитать</button>
+        <h3>Результат</h3>
+        <p id="out"></p>
+        <script>
+            function calc() {
+                let p1 = parseInt(document.getElementById("fside").value);
+                if (isNaN(p1)) {
+                    document.getElementById("out").innerHTML = "Неправильный формат входных данных";
+                } else {
+                    if (p1 == 1) {
+                        document.getElementById("out").innerHTML = 0;
+                    } else if (p1 == 2) {
+                        document.getElementById("out").innerHTML = 1;
+                    } else if (p1 > 2) {
+                        let a1 = 0;
+                        let a2 = 1;
+                        let a3 = 0;
+                        for (let i = 0; i < p1 - 2; i++) {
+                            a3 = a2 + a1;
+                            a1 = a2;
+                            a2 = a3;
+                        }
+                        document.getElementById("out").innerHTML = a2;
+                    } else {
+                        document.getElementById("out").innerHTML = "Неправильный формат входных данных";
+                    }
+                }
+            }
+        </script>
+        <br><a href="./index.html">Главная страница</a>
+    </bode>
+</html>
