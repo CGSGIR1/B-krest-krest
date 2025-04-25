@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Balls with Collisions</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            z-index: 2;
+        }
+        #cursor-circle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            width: 80px;
+            height: 80px;
+            z-index: 3;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="cursor-circle"></div>
+        <canvas id="trail"></canvas>
+    </div>
+
+    <script>
+        const container = document.getElementById('container');
+        const trailCanvas = document.getElementById('trail');
+        const trailCtx = trailCanvas.getContext('2d', { willReadFrequently: true });
+        const cursorCircle = document.getElementById('cursor-circle');
+        
+        // Настройки
+        const BALL_COUNT = 50;
+        const MIN_RADIUS = 8;
+        const MAX_RADIUS = 20;
+        const MIN_SPEED = 8;
+        const MAX_SPEED = 13;
+        const CURSOR_RADIUS = 40;
+        
+
+        // Инициализация canvas
+        function initCanvas() {
+            trailCanvas.width = container.clientWidth;
+            trailCanvas.height = container.clientHeight;
+            trailCtx.fillStyle = 'rgba(0, 0, 0, 1)';
+            trailCtx.fillRect(0, 0, trailCanvas.width, trailCanvas.height);
+            initCursor();
+        }
+        initCanvas();
+        
+        // Генератор цветов
+        const hueStep = 360 / BALL_COUNT;
+        const getBallColor = (index) => {
+            const hue = (index * hueStep) % 360;
+            return `hsl(${hue}, 100%, 60%)`;
+        };
+
+        const colors = [
+            '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
+            '#536DFE', '#448AFF', '#40C4FF', '#18FFFF',
+            '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41',
+            '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
+        ];
+        
+        // Класс шара
+        class Ball {
+            constructor(index) {
+                this.radius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
+                this.x = this.radius + Math.random() * (container.clientWidth - 2 * this.radius);
+                this.y = this.radius + Math.random() * (container.clientHeight - 2 * this.radius);
+                this.dx = (Math.random() - 0.5) * (MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED));
+                this.dy = (Math.random() - 0.5) * (MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED));
+                this.color = this.getRandomColor();
+                this.trailColor = this.color.replace(')', ', 0.2)').replace('hsl', 'hsla');
+                this.mass = this.radius * this.radius;
+                this.element = document.createElement('div');
+                this.element.className = 'ball';
+                this.element.style.width = `${this.radius * 2}px`;
+                this.element.style.height = `${this.radius * 2}px`;
+                this.element.style.backgroundColor = this.color;
+                container.appendChild(this.element);
+            }
+
+            getRandomColor() {
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            changeColor() {
+                this.color = this.getRandomColor();
+                this.element.style.backgroundColor = this.color;
+                this.trailColor = this.color.replace(')', ', 0.2)').replace('hsl', 'hsla');
+            }
+            
+            update(cursorX, cursorY) {
+                const prevX = this.x;
+                const prevY = this.y;
+                
+                this.x += this.dx;
+                this.y += this.dy;
+                
+                this.checkWallCollision();
+                this.checkCursorCollision(cursorX, cursorY);
+
+                this.element.style.left = `${this.x - this.radius}px`;
+                this.element.style.top = `${this.y - this.radius}px`;
+                
+                this.drawTrail(prevX, prevY);
+            }
+            
+            checkWallCollision() {
+                if (this.x + this.radius > container.clientWidth) {
+                    this.x = container.clientWidth - this.radius;
+                    this.dx = -this.dx;
+                }
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.dx = -this.dx;
+                }
+                if (this.y + this.radius > container.clientHeight) {
+                    this.y = container.clientHeight - this.radius;
+                    this.dy = -this.dy;
+                }
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.dy = -this.dy;
+                }
+            }
+
+            checkCursorCollision(cursorX, cursorY) {
+                if (!cursorX || !cursorY) return;
+                
+                const dx = cursorX - this.x;
+                const dy = cursorY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.radius + CURSOR_RADIUS) {
+                    // Вычисляем угол столкновения
+                    const angle = Math.atan2(dy, dx);
+                    const sin = Math.sin(angle);
+                    const cos = Math.cos(angle);
+                    
+                    // Поворот системы координат
+                    const x1 = 0;
+                    const y1 = 0;
+                    const x2 = dx * cos + dy * sin;
+                    const y2 = dy * cos - dx * sin;
+                    
+                    // Поворот скоростей (курсор считается неподвижным с бесконечной массой)
+                    const vx1 = this.dx * cos + this.dy * sin;
+                    const vy1 = this.dy * cos - this.dx * sin;
+                    
+                    // Упругое столкновение с неподвижным объектом
+                    const vx1Final = -vx1;
+                    
+                    // Коррекция позиции
+                    const overlap = (this.radius + CURSOR_RADIUS) - distance;
+                    const moveX = overlap * cos;
+                    const moveY = overlap * sin;
+                    
+                    this.x -= moveX;
+                    this.y -= moveY;
+                    
+                    // Возврат к исходной системе координат
+                    this.dx = vx1Final * cos - vy1 * sin;
+                    this.dy = vy1 * cos + vx1Final * sin;
+                }
+            }
+            drawTrail(prevX, prevY) {
+                trailCtx.beginPath();
+                trailCtx.moveTo(prevX, prevY);
+                trailCtx.lineTo(this.x, this.y);
+                trailCtx.strokeStyle = this.trailColor;
+                trailCtx.lineWidth = this.radius;
+                trailCtx.lineCap = 'round';
+                trailCtx.stroke();
+            }
+        }
+        
+        // Создаем шары
+        const balls = [];
+        for (let i = 0; i < BALL_COUNT; i++) {
+            balls.push(new Ball(i));
+        }
+        
+        // Проверка столкновений между шарами
+        function checkCollisions() {
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    const ball1 = balls[i];
+                    const ball2 = balls[j];
+                    
+                    const dx = ball2.x - ball1.x;
+                    const dy = ball2.y - ball1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < ball1.radius + ball2.radius) {
+                        // Вычисляем угол столкновения
+                        const angle = Math.atan2(dy, dx);
+                        const sin = Math.sin(angle);
+                        const cos = Math.cos(angle);
+                        
+                        // Поворот системы координат
+                        const x1 = 0;
+                        const y1 = 0;
+                        const x2 = dx * cos + dy * sin;
+                        const y2 = dy * cos - dx * sin;
+                        
+                        // Поворот скоростей
+                        const vx1 = ball1.dx * cos + ball1.dy * sin;
+                        const vy1 = ball1.dy * cos - ball1.dx * sin;
+                        const vx2 = ball2.dx * cos + ball2.dy * sin;
+                        const vy2 = ball2.dy * cos - ball2.dx * sin;
+                        
+                        // Упругое столкновение
+                        const vx1Final = ((ball1.mass - ball2.mass) * vx1 + 2 * ball2.mass * vx2) / (ball1.mass + ball2.mass);
+                        const vx2Final = ((ball2.mass - ball1.mass) * vx2 + 2 * ball1.mass * vx1) / (ball1.mass + ball2.mass);
+                        
+                        // Коррекция позиций
+                        const overlap = (ball1.radius + ball2.radius) - distance;
+                        const moveX = overlap * cos / 2;
+                        const moveY = overlap * sin / 2;
+                        
+                        ball1.x -= moveX;
+                        ball1.y -= moveY;
+                        ball2.x += moveX;
+                        ball2.y += moveY;
+                        
+                        // Возврат к исходной системе координат
+                        ball1.dx = vx1Final * cos - vy1 * sin;
+                        ball1.dy = vy1 * cos + vx1Final * sin;
+                        ball2.dx = vx2Final * cos - vy2 * sin;
+                        ball2.dy = vy2 * cos + vx2Final * sin;
+
+                        ball1.changeColor();
+                        ball2.changeColor();
+                    }
+                }
+            }
+        }
+        
+        // Функция для плавного затухания следов
+        function fadeTrails() {
+            const imageData = trailCtx.getImageData(0, 0, trailCanvas.width, trailCanvas.height);
+            const data = imageData.data;
+            
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 5) {
+                    data[i] = data[i] * 0.97;
+                }
+            }
+            
+            trailCtx.putImageData(imageData, 0, 0);
+        }
+                // Позиция курсора
+        let cursorX = null;
+        let cursorY = null;
+        
+        // Обновление позиции курсора
+        function updateCursorPosition(e) {
+            cursorX = e.clientX;
+            cursorY = e.clientY;
+            cursorCircle.style.transition = 'transform 0.1s ease-out'; // Плавное движение
+            cursorCircle.style.opacity = '0.2';
+            cursorCircle.style.left = `${cursorX}px`;
+            cursorCircle.style.top = `${cursorY}px`;
+        }
+
+        function initCursor() {
+            cursorCircle.style.width = `${CURSOR_RADIUS * 2}px`;
+            cursorCircle.style.height = `${CURSOR_RADIUS * 2}px`;
+            
+            // Скрываем курсор если мышь не над контейнером
+            container.addEventListener('mouseleave', () => {
+                cursorCircle.style.opacity = '0';
+            });
+            
+            container.addEventListener('mouseenter', () => {
+                if (cursorX) cursorCircle.style.opacity = '1';
+            });
+        }
+
+        container.addEventListener('mousemove', updateCursorPosition);
+        container.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            updateCursorPosition(e.touches[0]);
+        });
+
+        
+        // Анимация
+        function animate() {
+            fadeTrails();
+            checkCollisions();
+            
+            balls.forEach(ball => ball.update(cursorX, cursorY));
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Обработчик изменения размера окна
+        window.addEventListener('resize', () => {
+            initCanvas();
+        });
+        
+        // Запуск анимации
+        animate();
+    </script>
+</body>
+</html>

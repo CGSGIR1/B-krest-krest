@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DOTA 3</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            flex-direction: column;
+        }
+        #game {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 2px solid #000;
+            background-color: white;
+            overflow: hidden;
+        }
+        .kvadrat {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>DOTA 3</h1>
+    <p>Очки: <span id="score">0</span></p>
+    <div id="game"></div>
+    <script>
+        let score = 0;
+        const game = document.getElementById('game');
+        const scoreDisplay = document.getElementById('score');
+        
+        function spawnkvadrat() {
+            const kvadrat = document.createElement('div');
+            kvadrat.classList.add('kvadrat');
+            
+            const maxX = game.clientWidth - 50;
+            const maxY = game.clientHeight - 50;
+            
+            kvadrat.style.left = Math.random() * maxX + 'px';
+            kvadrat.style.top = Math.random() * maxY + 'px';
+            
+            kvadrat.addEventListener('click', () => {
+                score++;
+                scoreDisplay.textContent = score;
+                kvadrat.remove();
+                spawnkvadrat();
+            });
+            
+            game.innerHTML = '';
+            game.appendChild(kvadrat);
+        }
+        
+        spawnkvadrat();
+    </script>
+</body>
+</html>
